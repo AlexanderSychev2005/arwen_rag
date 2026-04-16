@@ -1,0 +1,25 @@
+[project]
+name = "arwen-project"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "chardet>=7.4.3",
+    "edge-tts>=7.2.8",
+    "faster-whisper>=1.2.1",
+    "google-genai>=1.73.1",
+    "langchain>=1.2.15",
+    "langchain-community>=0.4.1",
+    "langchain-huggingface>=1.2.1",
+    "langchain-qdrant>=1.1.0",
+    "numpy>=2.4.4",
+    "pygame>=2.6.1",
+    "python-dotenv>=1.2.2",
+    "qdrant-client>=1.17.1",
+    "scipy>=1.17.1",
+    "sentence-transformers>=5.4.1",
+    "sounddevice>=0.5.5",
+    "torch>=2.11.0",
+    "torchaudio>=2.11.0",
+]

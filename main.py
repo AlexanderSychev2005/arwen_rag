@@ -20,11 +20,13 @@ from ears import ArwenEars
 
 load_dotenv()
 
+openweather_api_key = os.getenv("OPENWEATHER_API_KEY")
+
 LLM_PROVIDER = "groq"  # or ollama
 
 pygame.mixer.init()
 
-print("Jarvis initialization")
+print("Arwen initialization")
 ears = ArwenEars(silence_duration=1.5, vad_threshold=0.5)
 
 groq_api_key = os.getenv("GROQ_API_KEY")
@@ -122,11 +124,32 @@ def get_current_time() -> str:
 
 @tool
 def get_weather(location: str) -> str:
-    """Returns ONLY the CURRENT weather for a city. For future forecasts, use the search_tool instead."""
+    """Returns the current weather AND tomorrow's forecast for a specific city. Use this for ALL weather questions."""
     try:
-        response = requests.get(f"https://wttr.in/{location}?format=3")
-        response.encoding = "utf-8"
-        return response.text
+        if not openweather_api_key:
+            return "Error: OpenWeather API key is missing."
+
+        current_url = f"https://api.openweathermap.org/data/2.5/weather?q={location}&appid={openweather_api_key}&units=metric"
+        curr_data = requests.get(current_url).json()
+
+        if curr_data.get("cod") != 200:
+            return f"Could not find weather for {location}."
+
+        curr_temp = curr_data["main"]["temp"]
+        curr_desc = curr_data["weather"][0]["description"]
+
+        forecast_url = f"https://api.openweathermap.org/data/2.5/forecast?q={location}&appid={openweather_api_key}&units=metric"
+        cast_data = requests.get(forecast_url).json()
+
+        tomorrow_data = cast_data["list"][8]
+        tom_temp = tomorrow_data["main"]["temp"]
+        tom_desc = tomorrow_data["weather"][0]["description"]
+        tom_date = tomorrow_data["dt_txt"]
+
+        return (
+            f"Current weather in {location}: {curr_desc}, {curr_temp}°C. \n"
+            f"Forecast for tomorrow ({tom_date}): {tom_desc}, around {tom_temp}°C."
+        )
     except Exception as e:
         return f"Weather palantir is blocked: {e}"
 
@@ -175,6 +198,8 @@ def get_llm_response(user_text):
             for tool_call in ai_msg.tool_calls:
                 tool_name = tool_call["name"]
 
+                print(f"Arwen uses: {tool_name}")
+
                 if tool_name == "get_weather":
                     location = tool_call["args"].get("location", "Kyiv")
                     tool_result = get_weather.invoke({"location": location})
@@ -182,8 +207,9 @@ def get_llm_response(user_text):
                 elif tool_name == "get_current_time":
                     tool_result = get_current_time.invoke({})
 
-                else:  # DuckDuckGo Search
+                else:
                     search_query = tool_call["args"].get("query", "")
+                    print(f"Search query: {search_query}")
                     tool_result = search_tool.run(search_query)
 
                 messages.append(

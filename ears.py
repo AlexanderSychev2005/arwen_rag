@@ -33,7 +33,7 @@ class ArwenEars:
         self.audio_queue.put(indata.copy())
 
     def listen_and_record(self, output_filename="temp_input.wav"):
-        print("\n[Jarvis] I listen carefully...")
+        print("\n[Arwen] I listen carefully...")
 
         recording = []
         is_speaking = False
@@ -55,7 +55,7 @@ class ArwenEars:
                 if speech_prob > self.vad_threshold:
                     if not is_speaking:
                         print(
-                            "[Jarvis] I hear you, start recorning...",
+                            "[Arwen] I hear you, start recorning...",
                             end="",
                             flush=True,
                         )
@@ -72,7 +72,7 @@ class ArwenEars:
                             silence_start_time = time.time()
 
                         if time.time() - silence_start_time > self.silence_duration:
-                            print("\n[Jarvis] Speech is ended.")
+                            print("\n[Arwen] Speech is ended.")
                             break
 
         audio_data = np.concatenate(recording, axis=0)

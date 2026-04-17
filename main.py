@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from faster_whisper import WhisperModel
 from groq import Groq
 from langchain_community.tools import DuckDuckGoSearchRun
+from langchain_core.documents import Document
 from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
 from langchain_core.tools import tool
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -49,8 +50,10 @@ elif LLM_PROVIDER == "ollama":
 else:
     raise ValueError("LLM_PROVIDER must be 'groq' or 'ollama'")
 
-print("Connecting to Qdrant Database...")
+print("Connecting to Qdrant Database (Lore)...")
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+
+
 vector_store = QdrantVectorStore.from_existing_collection(
     embedding=embeddings,
     collection_name="middle_earth_lore",
@@ -58,6 +61,12 @@ vector_store = QdrantVectorStore.from_existing_collection(
 )
 retriever = vector_store.as_retriever(search_kwargs={"k": 3})
 
+print("Connecting to Arwen's Long-Term Memory...")
+memory_store = QdrantVectorStore.from_existing_collection(
+    embedding=embeddings,
+    collection_name="arwen_episodic_memory",
+    url="http://localhost:6333",
+)
 
 ARWEN_VOICE = "en-IE-EmilyNeural"  # en-GB-LibbyNeural
 
@@ -159,25 +168,62 @@ tools = [search_tool, get_current_time, get_weather]
 llm_with_tools = chat_model.bind_tools(tools)
 
 
+def save_to_memory(user_text, bot_response):
+    memory_text = f"User said: {user_text}\nArwen replied: {bot_response}"
+    doc = Document(
+        page_content=memory_text,
+        metadata={
+            "source": "past_conversation",
+            "timestamp": datetime.datetime.now().isoformat(),
+        },
+    )
+    memory_store.add_documents([doc])
+
+
 def get_llm_response(user_text):
     """Looks for the relevant info in the vector database and sends the prompt to Gemini"""
     try:
-        docs = retriever.invoke(user_text)
+        rewrite_prompt = f"""
+        Extract the core search entities from this user message. 
+        Convert it into a short, dense search query (2-5 words). 
+        Do not answer the question, just output the keywords.
+        Output ONLY a single line of space-separated keywords without dashes or bullets
+        User: '{user_text}'
+        """
+        optimized_query = chat_model.invoke(
+            [HumanMessage(content=rewrite_prompt)]
+        ).content.strip()
+        print(f"\n[RAG] Original: {user_text}")
+        print(f"[RAG] Optimized Query: {optimized_query}")
 
-        retrieved_context = "\n\n".join(
+        lore_docs = retriever.invoke(optimized_query)
+        lore_context = "\n\n".join(
             [
                 f"Source: {doc.metadata.get('source', 'Unknown')}\nText: {doc.page_content}"
-                for doc in docs
+                for doc in lore_docs
             ]
         )
+
+        print(f"\n[RAG] Found {len(lore_docs)} paragraphs in Middle-earth Lore.")
+        if lore_docs:
+            print(f"[RAG] Top match preview: {lore_docs[0].page_content[:100]}...")
+
+        memory_docs = memory_store.similarity_search(user_text, k=2)
+        memory_context = "\n\n".join([doc.page_content for doc in memory_docs])
+
         prompt = f"""
-        Context from Middle-earth lore:
-        {retrieved_context}
+        PAST CONVERSATION MEMORIES:
+        {memory_context if memory_docs else "No relevant memories found."}
+
+        CONTEXT FROM MIDDLE-EARTH LORE (YOUR PRIMARY KNOWLEDGE):
+        {lore_context if lore_docs else "No lore found in the archives."}
 
         User question: {user_text}
         
-        If the lore context above is insufficient to answer the question, 
-        you MUST use the provided search tool to find the information in the outside world.
+        CRITICAL INSTRUCTIONS FOR TOOL USAGE:
+        1. FIRST, try to answer the question using ONLY the 'CONTEXT FROM MIDDLE-EARTH LORE' above. 
+        2. DO NOT use the search_tool for questions about Middle-earth, Lord of the Rings, or characters.
+        3. ONLY use the search_tool, weather tool, or time tool if the user asks about the modern real world (e.g., modern cities, current dates, real-world weather).
         """
         messages = [
             SystemMessage(content=system_instruction),
@@ -247,6 +293,8 @@ async def main_loop():
             print(f"You: {user_text}")
             bot_response = get_llm_response(user_text)
             print(f"Arwen: {bot_response}")
+
+            save_to_memory(user_text, bot_response)
 
             await speak(bot_response)
 

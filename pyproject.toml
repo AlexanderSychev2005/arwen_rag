@@ -25,6 +25,7 @@ dependencies = [
     "scipy>=1.17.1",
     "sentence-transformers>=5.4.1",
     "sounddevice>=0.5.5",
+    "tavily-python>=0.7.23",
     "torch>=2.11.0",
     "torchaudio>=2.11.0",
 ]

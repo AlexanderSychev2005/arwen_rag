@@ -85,6 +85,7 @@ def get_llm_response(user_text: str) -> str:
                 if tool_name == "get_weather":
                     location: str = tool_call["args"].get("location", "Kyiv")
                     tool_result: str = get_weather.invoke({"location": location})
+                    print(f"-> Weather result: {tool_result}")
 
                 elif tool_name == "get_current_time":
                     tool_result: str = get_current_time.invoke({})

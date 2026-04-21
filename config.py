@@ -7,7 +7,7 @@ load_dotenv()
 EMBEDDINGS_MODEL = "all-MiniLM-L6-v2"
 VECTOR_SIZE = 384  # Size for all-MiniLM-L6-v2 embeddings
 
-LLM_PROVIDER = "groq"
+
 ARWEN_VOICE = "en-IE-EmilyNeural"
 QDRANT_URL = "http://localhost:6333"
 

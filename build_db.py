@@ -51,7 +51,6 @@ def build_vector_database(folder_path: str, collection_name: str) -> None:
         print("[!] No documents found. Please check your folder structure.")
         return
 
-    # 2. Split the text
     print("[2/5] Splitting text into chunks...")
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000, chunk_overlap=150, length_function=len
@@ -59,16 +58,13 @@ def build_vector_database(folder_path: str, collection_name: str) -> None:
     chunks: List[Document] = text_splitter.split_documents(documents)
     print(f"-> Text splitted into {len(chunks)} fragments.")
 
-    # 3. Initialize Qdrant Client and Collection
     print("[3/5] Connecting to Qdrant and initializing collections...")
     qdrant_client = QdrantClient(url=QDRANT_URL)
     init_collection(client=qdrant_client, collection_name=collection_name)
 
-    # 4. Load the local embeddings model
     print("[4/5] Loading the embedding model...")
     embeddings = HuggingFaceEmbeddings(model_name=EMBEDDINGS_MODEL)
 
-    # 5. Upload to Database
     print(f"[5/5] Uploading vectors to collection '{collection_name}'...")
     vector_store = QdrantVectorStore(
         client=qdrant_client,
@@ -76,7 +72,6 @@ def build_vector_database(folder_path: str, collection_name: str) -> None:
         embedding=embeddings,
     )
 
-    # add_documents appends new vectors safely to the existing collection
     vector_store.add_documents(chunks)
     print(
         f"Success! Knowledge from '{folder_path}' is now stored in '{collection_name}'.\n"

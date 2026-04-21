@@ -1,7 +1,7 @@
 from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
 from langchain_groq import ChatGroq
 
-from config import LLM_PROVIDER, SYSTEM_INSTRUCTION
+from config import SYSTEM_INSTRUCTION
 from memory import memory_store, retriever
 from tools import (
     get_current_time,
@@ -11,8 +11,7 @@ from tools import (
     tools_list,
 )
 
-print(f"Initializing {LLM_PROVIDER.upper()} Brain...")
-# Initialize the model and bind our tools
+print("Initializing Groq Brain...")
 chat_model = ChatGroq(model="llama-3.1-8b-instant", temperature=0.0)
 llm_with_tools = chat_model.bind_tools(tools_list, parallel_tool_calls=False)
 

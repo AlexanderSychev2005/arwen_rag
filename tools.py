@@ -66,22 +66,22 @@ def get_weather(location: str) -> str:
         if not OPENWEATHER_API_KEY:
             return "Error: OpenWeather API key is missing."
 
-        current_url: str = f"https://api.openweathermap.org/data/2.5/weather?q={location}&appid={OPENWEATHER_API_KEY}&units=metric"
-        curr_data: dict = requests.get(current_url).json()
+        current_url = f"https://api.openweathermap.org/data/2.5/weather?q={location}&appid={OPENWEATHER_API_KEY}&units=metric"
+        curr_data = requests.get(current_url).json()
 
         if curr_data.get("cod") != 200:
             return f"Could not find weather for {location}."
 
-        curr_temp: float = curr_data["main"]["temp"]
-        curr_desc: str = curr_data["weather"][0]["description"]
+        curr_temp = curr_data["main"]["temp"]
+        curr_desc = curr_data["weather"][0]["description"]
 
-        forecast_url: str = f"https://api.openweathermap.org/data/2.5/forecast?q={location}&appid={OPENWEATHER_API_KEY}&units=metric"
-        cast_data: dict = requests.get(forecast_url).json()
+        forecast_url = f"https://api.openweathermap.org/data/2.5/forecast?q={location}&appid={OPENWEATHER_API_KEY}&units=metric"
+        cast_data = requests.get(forecast_url).json()
 
-        tomorrow_data: dict = cast_data["list"][8]
-        tom_temp: float = tomorrow_data["main"]["temp"]
-        tom_desc: str = tomorrow_data["weather"][0]["description"]
-        tom_date: str = tomorrow_data["dt_txt"]
+        tomorrow_data = cast_data["list"][8]
+        tom_temp = tomorrow_data["main"]["temp"]
+        tom_desc = tomorrow_data["weather"][0]["description"]
+        tom_date = tomorrow_data["dt_txt"]
 
         return (
             f"Current weather in {location}: {curr_desc}, {curr_temp}°C. \n"
@@ -91,7 +91,7 @@ def get_weather(location: str) -> str:
         return f"Weather palantir is blocked: {e}"
 
 
-tools_list: list = [
+tools_list = [
     search_the_web,
     get_current_time,
     get_weather,

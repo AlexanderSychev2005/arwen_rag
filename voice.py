@@ -57,7 +57,6 @@ async def speak(text: str) -> None:
 def transcribe_audio(audio_file_path: str) -> str:
     """
     Transcribes the recorded audio file using Groq's fast Whisper API.
-
     """
     with open(audio_file_path, "rb") as file:
         transcription = groq_client.audio.transcriptions.create(

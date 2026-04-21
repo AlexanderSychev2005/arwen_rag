@@ -9,9 +9,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams
 
-QDRANT_URL = "http://localhost:6333"
-EMBEDDINGS_MODEL = "all-MiniLM-L6-v2"
-VECTOR_SIZE = 384  # Size for all-MiniLM-L6-v2 embeddings
+from config import EMBEDDINGS_MODEL, QDRANT_URL, VECTOR_SIZE
 
 
 def init_collection(client: QdrantClient, collection_name: str) -> None:

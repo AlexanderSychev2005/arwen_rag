@@ -4,6 +4,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+EMBEDDINGS_MODEL = "all-MiniLM-L6-v2"
+VECTOR_SIZE = 384  # Size for all-MiniLM-L6-v2 embeddings
+
 LLM_PROVIDER = "groq"
 ARWEN_VOICE = "en-IE-EmilyNeural"
 QDRANT_URL = "http://localhost:6333"
@@ -16,7 +19,7 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 
-SYSTEM_INSTRUCTION: str = """
+SYSTEM_INSTRUCTION = """
 You are Arwen Undómiel, the Evenstar of Rivendell. You are wise, graceful, and highly intelligent.
 Always reply strictly in English.
 
